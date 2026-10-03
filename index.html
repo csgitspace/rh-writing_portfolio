@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roy-Hart Writing Portfolio</title>
+    <!-- CRITICAL FOR APPS SCRIPT EMBEDS -->
+    <base target="_top">
+    
+    <!-- CSS LOCK: Prevents double scrollbars in Google Sites -->
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100vh;     
+        overflow: hidden;  
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
+      .css-lock-wrapper {
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;  
+        scroll-behavior: smooth;
+      }
+    </style>
+
+    <!-- Tailwind CSS for clean, responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Enables manual and system dark mode toggling
+            theme: {
+                extend: {
+                    colors: {
+                        royhart: {
+                            purple: '#5b2c83',
+                            dark: '#452064',
+                            gold: '#d4a200',
+                            light: '#f5f3f8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- PDF-Lib for merging actual documents into one master PDF -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-100 transition-colors duration-200">
+
+    <!-- CSS LOCK WRAPPER -->
+    <div class="css-lock-wrapper">
+        
+        <!-- Navigation -->
+        <nav class="bg-royhart-purple text-white shadow-md">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="book-open" class="h-8 w-8 text-royhart-gold hidden sm:block"></i>
+                    <div class="flex flex-col">
+                        <h1 class="text-xl md:text-2xl font-bold tracking-wide leading-tight">Writing Portfolio Portal</h1>
+                        <span class="text-[10px] md:text-xs text-royhart-gold font-bold tracking-widest uppercase mt-0.5">Royalton-Hartland English Dept</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="nav-user-info" class="text-sm font-medium hidden md:flex items-center">
+                        <!-- User info injected here -->
+                    </div>
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-royhart-dark/50 hover:bg-royhart-dark transition" title="Toggle Dark Mode">
+                        <i data-lucide="moon" id="dark-mode-icon" class="h-5 w-5 text-royhart-gold"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="max-w-6xl mx-auto px-4 py-8" id="app-container">
+            
+            <!-- Loading State -->
+            <div id="view-loading" class="flex flex-col items-center justify-center py-20">
+                <i data-lucide="loader-2" class="h-10 w-10 text-royhart-purple dark:text-purple-400 animate-spin mb-4"></i>
+                <p class="text-gray-500 dark:text-gray-400 font-medium">Loading your portfolio data...</p>
+            </div>
+
+            <!-- Unauthorized State -->
+            <div id="view-unauthorized" class="hidden text-center py-20">
+                <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 inline-block p-4 rounded-full mb-4">
+                    <i data-lucide="lock" class="h-10 w-10"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2 dark:text-white">Access Denied</h2>
+                <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto">Your email address is not registered in the system. Please ensure you are logged into your school Google account and contact your administrator if the issue persists.</p>
+            </div>
+
+            <!-- Student View -->
+            <div id="view-student" class="hidden space-y-8">
+                
+                <!-- Student Header / Action Area -->
+                <div class="bg-royhart-purple text-white p-6 md:p-8 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold mb-2 text-white">My Portfolio</h2>
+                        <p class="text-purple-200">Welcome to your writing showcase. Upload new artifacts or review your past work below.</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <button onclick="openUploadModal()" class="bg-royhart-gold text-white px-6 py-3 rounded-lg font-bold hover:bg-yellow-600 transition shadow-md flex items-center justify-center text-lg whitespace-nowrap">
+                            <i data-lucide="plus-circle" class="h-5 w-5 mr-2"></i> Add Artifact
+                        </button>
+                        <button onclick="exportPortfolio(this)" class="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-lg font-medium hover:bg-white/20 transition shadow-sm flex items-center justify-center whitespace-nowrap">
+                            <i data-lucide="printer" class="h-5 w-5 mr-2"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Portfolio History List -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Artifact History</h3>
+                    <div id="student-artifacts-list" class="space-y-4">
+                        <!-- Artifacts injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher View -->
+            <div id="view-teacher" class="hidden">
+                <!-- Student List Dashboard -->
+                <div id="teacher-dashboard">
+                    
+                    <!-- Quick Stats Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center transition-colors">
+                            <div class="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg mr-4">
+                                <i data-lucide="users" class="h-6 w-6 text-royhart-purple dark:text-purple-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Enrolled</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-total-students">--</p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex items-center cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900/10 transition-colors group" onclick="viewNeedsFeedback()">
+                            <div class="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-lg mr-4 group-hover:bg-yellow-200 dark:group-hover:bg-yellow-900/50 transition-colors">
+                                <i data-lucide="clock" class="h-6 w-6 text-yellow-600 dark:text-yellow-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">Needs Feedback &rarr;</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-needs-feedback">--</p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex items-center cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors group" onclick="viewBestWorks()">
+                            <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg mr-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors">
+                                <i data-lucide="award" class="h-6 w-6 text-green-600 dark:text-green-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">Best Works &rarr;</p>
+                                <p class="text-2xl font-bold text-gray-900 dark:text-white" id="stat-best-works">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher Tabs -->
+                    <div class="flex space-x-8 border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap hide-scrollbar">
+                        <button id="tab-roster" onclick="switchTeacherTab('roster')" class="pb-3 text-royhart-purple dark:text-purple-400 font-bold border-b-2 border-royhart-purple dark:border-purple-400 transition-colors">Student Roster</button>
+                        <button id="tab-artifacts" onclick="switchTeacherTab('artifacts')" class="pb-3 text-gray-500 dark:text-gray-400 font-medium border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Global Artifact Explorer</button>
+                        <button id="tab-assignments" onclick="switchTeacherTab('assignments')" class="pb-3 text-gray-500 dark:text-gray-400 font-medium border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Anchor Artifact Library</button>
+                        <button id="tab-reports" onclick="switchTeacherTab('reports')" class="pb-3 text-gray-500 dark:text-gray-400 font-medium border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200 transition-colors"><i data-lucide="bar-chart-2" class="inline h-4 w-4 mr-1"></i>Submission Reports</button>
+                    </div>
+
+                    <!-- ================= ROSTER TAB ================= -->
+                    <div id="roster-section">
+                        <!-- Dashboard Header -->
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Student Directory</h2>
+                            <div class="flex items-center space-x-3 w-full md:w-auto mt-4 md:mt-0">
+                                <div class="relative flex-grow">
+                                    <i data-lucide="search" class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"></i>
+                                    <input type="text" id="search-students" placeholder="Search by name or email..." class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none shadow-sm transition-colors">
+                                </div>
+                                <button onclick="toggleAddStudent()" class="bg-royhart-purple text-white px-4 py-2 rounded-lg font-medium hover:bg-royhart-dark transition shadow-sm flex items-center whitespace-nowrap">
+                                    <i data-lucide="user-plus" class="h-4 w-4 mr-2"></i> Add
+                                </button>
+                                <button onclick="toggleBulkImport()" class="bg-royhart-gold text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-600 transition shadow-sm flex items-center whitespace-nowrap">
+                                    <i data-lucide="upload" class="h-4 w-4 mr-2"></i> Import
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Quick Filters -->
+                        <div id="quick-filters" class="mb-6 hidden">
+                            <!-- Filters injected here -->
+                        </div>
+
+                        <!-- Add Single Student Panel -->
+                        <div id="add-student-section" class="hidden mb-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-bold text-royhart-dark dark:text-purple-300 flex items-center">
+                                    <i data-lucide="user-plus" class="mr-2 h-5 w-5 text-royhart-purple dark:text-purple-400"></i> Add New Student
+                                </h3>
+                                <button onclick="toggleAddStudent()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i data-lucide="x" class="h-5 w-5"></i></button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student Name *</label>
+                                    <input type="text" id="new-std-name" placeholder="e.g. John Doe" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student Email *</label>
+                                    <input type="email" id="new-std-email" placeholder="e.g. jdoe@royhart.org" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Graduation Year</label>
+                                    <input type="text" id="new-std-grad" placeholder="e.g. 2026" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Grade</label>
+                                    <select id="new-std-grade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                        <option value="">Select Grade...</option>
+                                        <option value="6">6th Grade</option>
+                                        <option value="7">7th Grade</option>
+                                        <option value="8">8th Grade</option>
+                                        <option value="9">9th Grade</option>
+                                        <option value="10">10th Grade</option>
+                                        <option value="11">11th Grade</option>
+                                        <option value="12">12th Grade</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-6">
+                                <p id="add-student-status" class="text-sm font-medium hidden"></p>
+                                <div class="flex space-x-3 ml-auto">
+                                    <button onclick="toggleAddStudent()" class="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">Cancel</button>
+                                    <button id="btn-add-student" onclick="processAddStudent()" class="bg-royhart-purple text-white px-4 py-2 rounded-lg font-medium hover:bg-royhart-dark transition flex items-center">
+                                        Save Student
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bulk Import Panel -->
+                        <div id="bulk-import-section" class="hidden mb-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-royhart-dark dark:text-purple-300 flex items-center">
+                                    <i data-lucide="upload" class="mr-2 h-5 w-5 text-royhart-gold"></i> Bulk Import Students
+                                </h3>
+                                <button onclick="toggleBulkImport()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i data-lucide="x" class="h-5 w-5"></i></button>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Paste your CSV data below. First row must be headers including at minimum: <strong>Student Name, Student Email</strong>.</p>
+                            <textarea id="csv-input" rows="6" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none font-mono text-sm bg-gray-50 dark:bg-gray-900 dark:text-gray-300 transition-colors" placeholder="Student Name,Student Email,Grad Year,Current Grade&#10;John Doe,jdoe@royhart.org,2026,10&#10;Jane Smith,jsmith@royhart.org,2027,9"></textarea>
+                            
+                            <div class="flex items-center justify-between mt-4">
+                                <p id="import-status" class="text-sm font-medium hidden"></p>
+                                <div class="flex space-x-3 ml-auto">
+                                    <button onclick="toggleBulkImport()" class="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">Cancel</button>
+                                    <button id="btn-import" onclick="processBulkImport()" class="bg-royhart-purple text-white px-4 py-2 rounded-lg font-medium hover:bg-royhart-dark transition flex items-center">
+                                        Run Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Student List -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[300px] transition-colors">
+                            <ul id="students-list" class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <!-- Students injected here via search -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- ================= ARTIFACT EXPLORER TAB ================= -->
+                    <div id="artifacts-section" class="hidden">
+                        <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 transition-colors">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                <div class="md:col-span-1">
+                                    <div class="relative">
+                                        <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                                        <input type="text" id="art-search-text" placeholder="Search title or anchor artifact..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none text-sm transition-colors">
+                                    </div>
+                                </div>
+                                <div>
+                                    <select id="art-filter-type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors">
+                                        <option value="">All Writing Types</option>
+                                        <option value="Informational">Informational</option>
+                                        <option value="Argumentative">Argumentative</option>
+                                        <option value="Narrative">Narrative</option>
+                                        <option value="Literary Analysis">Literary Analysis</option>
+                                        <option value="Research">Research</option>
+                                        <option value="Creative">Creative</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select id="art-filter-grade" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors">
+                                        <option value="">All Grades (When Written)</option>
+                                        <option value="6">6th Grade</option>
+                                        <option value="7">7th Grade</option>
+                                        <option value="8">8th Grade</option>
+                                        <option value="9">9th Grade</option>
+                                        <option value="10">10th Grade</option>
+                                        <option value="11">11th Grade</option>
+                                        <option value="12">12th Grade</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select id="art-filter-year" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors">
+                                        <option value="">All School Years</option>
+                                        <!-- Year options injected dynamically -->
+                                    </select>
+                                </div>
+                                <div class="flex flex-col justify-center space-y-2">
+                                    <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                        <input type="checkbox" id="art-filter-best" class="h-4 w-4 text-royhart-gold focus:ring-royhart-gold border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mr-2 transition-colors">
+                                        Best Works Only
+                                    </label>
+                                    <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                                        <input type="checkbox" id="art-filter-needs-feedback" class="h-4 w-4 text-royhart-purple focus:ring-royhart-purple border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded mr-2 transition-colors">
+                                        Needs Feedback
+                                    </label>
+                                </div>
+                            </div>
+                            <!-- Active filter indicator (shown when navigating from Anchor Artifact Library) -->
+                            <div id="art-active-filter-banner" class="hidden mt-3 p-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-lg text-sm flex items-center justify-between">
+                                <span class="text-royhart-purple dark:text-purple-300 flex items-center">
+                                    <i data-lucide="filter" class="h-4 w-4 mr-2"></i>
+                                    <span id="art-active-filter-text"></span>
+                                </span>
+                                <button onclick="clearArtifactFilters()" class="text-xs font-semibold text-royhart-purple dark:text-purple-300 hover:underline">Clear all filters</button>
+                            </div>
+                        </div>
+                        
+                        <div id="global-artifacts-list" class="space-y-4">
+                            <!-- Global artifacts injected here -->
+                        </div>
+                    </div>
+
+                    <!-- ================= ASSIGNMENT LIBRARY TAB ================= -->
+                    <div id="assignments-section" class="hidden">
+                        <!-- Dashboard Header -->
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Anchor Artifact Library</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Define the milestone writing pieces students should submit to their portfolios upon completing your curriculum.</p>
+                            </div>
+                            <div class="flex items-center space-x-3 w-full md:w-auto">
+                                <select id="assignment-sort" class="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors" onchange="renderAssignmentsList()">
+                                    <option value="name">Sort by Name</option>
+                                    <option value="grade">Sort by Grade</option>
+                                    <option value="creator">Sort by Creator</option>
+                                </select>
+                                <button onclick="toggleAddAssignment()" class="bg-royhart-purple text-white px-4 py-2 rounded-lg font-medium hover:bg-royhart-dark transition shadow-sm flex items-center whitespace-nowrap">
+                                    <i data-lucide="plus-circle" class="h-4 w-4 mr-2"></i> Create
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Create Assignment Panel -->
+                        <div id="add-assignment-section" class="hidden mb-6 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-royhart-purple/30 dark:border-purple-500/30 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-lg font-bold text-royhart-dark dark:text-purple-300 flex items-center">
+                                    <i data-lucide="file-plus" class="mr-2 h-5 w-5 text-royhart-purple dark:text-purple-400"></i> Create New Anchor Artifact
+                                </h3>
+                                <button onclick="toggleAddAssignment()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i data-lucide="x" class="h-5 w-5"></i></button>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anchor Artifact Name *</label>
+                                    <input type="text" id="new-assign-name" placeholder="e.g. Macbeth Character Analysis" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Grade Level</label>
+                                    <select id="new-assign-grade" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                        <option value="">Any Grade</option>
+                                        <option value="6">6th Grade</option>
+                                        <option value="7">7th Grade</option>
+                                        <option value="8">8th Grade</option>
+                                        <option value="9">9th Grade</option>
+                                        <option value="10">10th Grade</option>
+                                        <option value="11">11th Grade</option>
+                                        <option value="12">12th Grade</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type of Writing</label>
+                                    <select id="new-assign-type" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors">
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Informational">Informational</option>
+                                        <option value="Argumentative">Argumentative</option>
+                                        <option value="Narrative">Narrative</option>
+                                        <option value="Literary Analysis">Literary Analysis</option>
+                                        <option value="Research">Research</option>
+                                        <option value="Creative">Creative</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description / Instructions</label>
+                                    <textarea id="new-assign-desc" rows="2" placeholder="Brief details about this anchor artifact..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none transition-colors"></textarea>
+                                </div>
+                                <div class="md:col-span-2 flex items-center bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors">
+                                    <input type="checkbox" id="new-assign-req" class="h-5 w-5 text-royhart-purple focus:ring-royhart-purple border-gray-300 dark:border-gray-500 dark:bg-gray-600 rounded cursor-pointer transition-colors">
+                                    <label for="new-assign-req" class="ml-2 block text-sm font-medium text-gray-800 dark:text-gray-200 cursor-pointer">
+                                        This is a required anchor artifact for students.
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between mt-6">
+                                <p id="add-assign-status" class="text-sm font-medium hidden"></p>
+                                <div class="flex space-x-3 ml-auto">
+                                    <button onclick="toggleAddAssignment()" class="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">Cancel</button>
+                                    <button id="btn-add-assign" onclick="processAddAssignment()" class="bg-royhart-purple text-white px-4 py-2 rounded-lg font-medium hover:bg-royhart-dark transition flex items-center">
+                                        Save Anchor Artifact
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignments List Grid -->
+                        <div id="assignments-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Assignment Cards injected here -->
+                        </div>
+                    </div>
+                    
+                    <!-- ================= REPORTS TAB ================= -->
+                    <div id="reports-section" class="hidden">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6 transition-colors">
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Submission Audit Report</h2>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Track artifact completion across the student body.</p>
+                                </div>
+                                <div class="mt-4 md:mt-0 flex items-center">
+                                    <label class="mr-3 text-sm font-medium text-gray-700 dark:text-gray-300">Filter by School Year:</label>
+                                    <select id="report-year-filter" class="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple transition-colors" onchange="renderReports()">
+                                        <!-- Options injected here -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Report Filters -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="relative">
+                                    <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-gray-400"></i>
+                                    <input type="text" id="report-search-text" placeholder="Search student name..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none text-sm transition-colors" oninput="renderReports()">
+                                </div>
+                                <div>
+                                    <select id="report-class-filter" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors" onchange="renderReports()">
+                                        <option value="">All Classes</option>
+                                        <!-- Options injected here -->
+                                    </select>
+                                </div>
+                                <div class="flex items-center">
+                                    <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 cursor-pointer bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 w-full transition-colors h-full">
+                                        <input type="checkbox" id="report-missing-filter" class="h-4 w-4 text-royhart-purple focus:ring-royhart-purple border-gray-300 dark:border-gray-500 dark:bg-gray-600 rounded cursor-pointer transition-colors mr-2" onchange="renderReports()">
+                                        Show Missing (< 2 Submissions)
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b-2 border-gray-200 dark:border-gray-700">
+                                            <th class="py-3 px-4 font-bold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">Student Name</th>
+                                            <th class="py-3 px-4 font-bold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider">Grad Year</th>
+                                            <th class="py-3 px-4 font-bold text-sm text-gray-600 dark:text-gray-300 uppercase tracking-wider text-center">Artifacts Submitted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="report-tbody">
+                                        <!-- Report rows injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Specific Student Details (Hidden by default) -->
+                <div id="teacher-student-details" class="hidden space-y-6">
+                    <button onclick="showTeacherDashboard()" class="text-royhart-purple dark:text-purple-400 font-medium flex items-center hover:underline transition-colors">
+                        <i data-lucide="arrow-left" class="h-4 w-4 mr-1"></i> Back to Dashboard
+                    </button>
+                    
+                    <div class="bg-royhart-light dark:bg-gray-800 border border-royhart-purple/20 dark:border-gray-700 p-6 rounded-xl flex justify-between items-center transition-colors">
+                        <div>
+                            <h2 id="ts-name" class="text-2xl font-bold text-gray-900 dark:text-white">Student Name</h2>
+                            <p id="ts-email" class="text-gray-600 dark:text-gray-400">email@student.com</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="ts-grad-year" class="inline-block bg-royhart-purple text-white text-sm px-3 py-1 rounded-full font-semibold shadow-sm"></span>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2 transition-colors">Writing Artifacts</h3>
+                    <div id="ts-artifacts-list" class="space-y-6">
+                        <!-- Artifacts injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div> <!-- END CSS LOCK WRAPPER -->
+
+    <!-- Upload Artifact Modal (Outside wrapper for safe fixed positioning) -->
+    <div id="upload-modal" class="fixed inset-0 bg-gray-900/75 z-50 hidden flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative transition-colors">
+            
+            <button onclick="closeUploadModal()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <i data-lucide="x" class="h-6 w-6"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-royhart-purple dark:text-purple-300 mb-6 flex items-center border-b border-gray-200 dark:border-gray-700 pb-4">
+                <i data-lucide="upload-cloud" class="mr-3 h-6 w-6"></i> Submit New Artifact
+            </h2>
+            
+            <!-- Dynamic Upload Form -->
+            <form id="upload-form" class="space-y-6">
+                
+                <!-- Form Layout Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Top Row: Assignment and Title -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anchor Artifact Name *</label>
+                        <select id="up-assignment-select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple bg-white dark:bg-gray-700 dark:text-white transition-colors" required onchange="handleAssignmentChange()">
+                            <option value="">-- Loading Anchor Artifacts --</option>
+                        </select>
+                        <input type="text" id="up-assignment-custom" class="hidden w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple mt-2 bg-white dark:bg-gray-700 dark:text-white transition-colors" placeholder="Type custom anchor artifact name...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title of Your Specific Work *</label>
+                        <input type="text" id="up-title" required placeholder="e.g. My Great Gatsby Essay" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-royhart-purple focus:border-transparent outline-none bg-white dark:bg-gray-700 dark:text-white transition-colors">
+                    </div>
+
+                    <!-- Mid Row: Type, Grade, Year -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type of Writing</label>
+                        <select id="up-type" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple bg-white dark:bg-gray-700 dark:text-white transition-colors">
+                            <option value="Informational">Informational</option>
+                            <option value="Argumentative">Argumentative</option>
+                            <option value="Narrative">Narrative</option>
+                            <option value="Literary Analysis">Literary Analysis</option>
+                            <option value="Research">Research</option>
+                            <option value="Creative">Creative</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Grade *</label>
+                            <select id="up-grade" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple bg-white dark:bg-gray-700 dark:text-white transition-colors">
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                            </select>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">School Year</label>
+                            <!-- Locked School Year -->
+                            <input type="text" id="up-year" readonly class="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-600/50 text-gray-500 dark:text-gray-400 rounded-lg outline-none cursor-not-allowed font-medium transition-colors">
+                        </div>
+                    </div>
+
+                    <!-- File / Link Section -->
+                    <div class="md:col-span-2 bg-royhart-light dark:bg-gray-700/30 p-4 rounded-xl border border-royhart-purple/20 dark:border-gray-600 transition-colors">
+                        <div class="flex space-x-6 mb-4 border-b border-gray-300 dark:border-gray-600">
+                            <button type="button" id="tab-file-mode" onclick="setUploadMode('file')" class="pb-2 border-b-2 border-royhart-purple dark:border-purple-400 text-royhart-purple dark:text-purple-300 font-bold transition-colors">Upload Local File</button>
+                            <button type="button" id="tab-link-mode" onclick="setUploadMode('link')" class="pb-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Paste Cloud Link</button>
+                        </div>
+                        
+                        <div id="mode-file-panel">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">File (PDF, Doc, Image) *</label>
+                            <input type="file" id="up-file" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-royhart-light dark:file:bg-gray-600 file:text-royhart-purple dark:file:text-purple-300 hover:file:bg-purple-100 dark:hover:file:bg-gray-500 transition-colors">
+                        </div>
+                        
+                        <div id="mode-link-panel" class="hidden">
+                            <div class="mb-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800/60">
+                                <p class="text-sm font-bold text-yellow-800 dark:text-yellow-200 flex items-center mb-1">
+                                    <i data-lucide="alert-triangle" class="inline h-4 w-4 mr-1.5"></i> Sharing required
+                                </p>
+                                <p class="text-xs text-yellow-800 dark:text-yellow-200 leading-relaxed">
+                                    Before you paste your link, open your Google Doc and click <b>Share</b>. Under "General access", change it to <b>"Anyone with the link"</b> set to <b>Viewer</b>. If your link isn't shared, your submission will be rejected.
+                                </p>
+                            </div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Google Doc / Drive Link *</label>
+                            <input type="url" id="up-link" placeholder="https://docs.google.com/document/d/..." class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple focus:border-transparent outline-none text-sm transition-colors">
+                            <div class="mt-2 flex items-center space-x-2">
+                                <button type="button" id="btn-check-link" onclick="checkLinkAccess()" class="text-xs font-semibold px-3 py-1.5 rounded-md bg-royhart-light dark:bg-gray-700 text-royhart-purple dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-gray-600 transition-colors flex items-center">
+                                    <i data-lucide="shield-check" class="inline h-3.5 w-3.5 mr-1"></i> Check sharing access
+                                </button>
+                                <span id="link-check-status" class="text-xs"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Dropdown -->
+                    <div class="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800/50 transition-colors">
+                        <label class="block text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+                            <i data-lucide="bell" class="inline h-4 w-4 mr-1"></i> Notify Teacher (Optional)
+                        </label>
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mb-2">Select a teacher to send them an instant email notification with a link to your artifact.</p>
+                        <select id="up-notify-teacher" class="w-full px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:text-white transition-colors">
+                            <option value="">-- Do Not Send Notification --</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student Reflection</label>
+                        <textarea id="up-reflection" rows="3" placeholder="What did you learn? What are you proud of? How have you grown?" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-royhart-purple outline-none transition-colors"></textarea>
+                    </div>
+                    
+                </div>
+                
+                <div class="pt-4 flex justify-end space-x-3 border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
+                    <button type="button" onclick="closeUploadModal()" class="px-6 py-2.5 rounded-lg font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-upload" class="bg-royhart-purple text-white px-8 py-2.5 rounded-lg font-bold hover:bg-royhart-dark transition shadow-md flex justify-center items-center">
+                        Submit Artifact
+                    </button>
+                </div>
+                <p id="upload-status" class="text-sm font-medium hidden mt-2 text-center"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        // Global State
+        let AppState = {
+            user: null, 
+            allStudents: [],
+            allArtifacts: [], 
+            currentArtifacts: [], 
+            assignments: [],
+            teachers: [],
+            activeFilter: null, 
+            activeAnchorFilter: null, // Set when navigating from Anchor Artifact Library to Explorer
+            uploadMode: 'file', // 'file' or 'link'
+            currentYear: '' 
+        };
+
+        // Dark Mode Initialization & Logic
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                setTimeout(() => {
+                    const icon = document.getElementById('dark-mode-icon');
+                    if(icon) { icon.setAttribute('data-lucide', 'sun'); lucide.createIcons(); }
+                }, 50);
+            } else {
+                document.documentElement.classList.remove('dark');
+                setTimeout(() => {
+                    const icon = document.getElementById('dark-mode-icon');
+                    if(icon) { icon.setAttribute('data-lucide', 'moon'); lucide.createIcons(); }
+                }, 50);
+            }
+        }
+        
+        initTheme();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('dark-mode-icon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                icon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons();
+        }
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // -------------------------------------------------------------
+        // HELPER: Promisify Google Apps Script Calls
+        // -------------------------------------------------------------
+        const runServer = (method, ...args) => {
+            return new Promise((resolve, reject) => {
+                google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    [method](...args);
+            });
+        };
+
+        // -------------------------------------------------------------
+        // APP INITIALIZATION
+        // -------------------------------------------------------------
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await runServer('getUserState');
+                hideAllViews();
+
+                if (response.status === 'error' || response.status === 'unauthorized') {
+                    document.getElementById('view-unauthorized').classList.remove('hidden');
+                    return;
+                }
+
+                AppState.user = response;
+                
+                const navInfo = document.getElementById('nav-user-info');
+                navInfo.innerHTML = `Welcome, ${response.name} <span class="bg-royhart-gold text-white text-xs px-2 py-1 rounded ml-2 uppercase">${response.role}</span>`;
+                navInfo.classList.remove('hidden');
+
+                if (response.role === 'student') {
+                    initStudentView();
+                } else if (response.role === 'teacher' || response.role === 'admin') {
+                    initTeacherView();
+                }
+            } catch (err) {
+                alert("Error initializing app: " + err);
+            }
+        });
+
+        function hideAllViews() {
+            document.getElementById('view-loading').classList.add('hidden');
+            document.getElementById('view-unauthorized').classList.add('hidden');
+            document.getElementById('view-student').classList.add('hidden');
+            document.getElementById('view-teacher').classList.add('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // STUDENT DASHBOARD LOGIC
+        // -------------------------------------------------------------
+        
+        function openUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+            // Disable scroll on the inner container when modal is open
+            document.querySelector('.css-lock-wrapper').style.overflowY = 'hidden'; 
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+            // Re-enable scroll on the inner container
+            document.querySelector('.css-lock-wrapper').style.overflowY = 'auto';
+            document.getElementById('upload-form').reset();
+            document.getElementById('upload-status').classList.add('hidden');
+            document.getElementById('up-year').value = AppState.currentYear;
+            document.getElementById('up-assignment-custom').classList.add('hidden');
+        }
+
+        async function initStudentView() {
+            document.getElementById('view-student').classList.remove('hidden');
+            
+            try {
+                const [config, teachersData] = await Promise.all([
+                    runServer('getFormConfig'),
+                    runServer('getActiveTeachers')
+                ]);
+                
+                AppState.currentYear = config.currentYear;
+                document.getElementById('up-year').value = AppState.currentYear;
+                AppState.assignments = config.assignments || [];
+                AppState.teachers = teachersData || [];
+
+                // Populate Assignment Dropdown
+                const assignSelect = document.getElementById('up-assignment-select');
+                let optionsHtml = '<option value="">-- Loading Anchor Artifacts --</option>';
+                AppState.assignments.forEach(a => {
+                    optionsHtml += `<option value="${escapeHtml(a.name)}">${escapeHtml(a.name)}</option>`;
+                });
+                optionsHtml += '<option value="CUSTOM">Other / Custom Anchor Artifact...</option>';
+                assignSelect.innerHTML = optionsHtml;
+
+                // Populate Teacher Notification Dropdown
+                const teacherSelect = document.getElementById('up-notify-teacher');
+                let teacherOptions = '<option value="">-- Do Not Send Notification --</option>';
+                AppState.teachers.forEach(t => {
+                    teacherOptions += `<option value="${escapeHtml(t.email)}">${escapeHtml(t.name)}</option>`;
+                });
+                teacherSelect.innerHTML = teacherOptions;
+                
+            } catch(e) {
+                console.error("Could not load form config", e);
+            }
+
+            await loadStudentArtifacts(AppState.user.email, 'student-artifacts-list', true);
+            
+            // Upload Handler
+            document.getElementById('upload-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-upload');
+                const status = document.getElementById('upload-status');
+                
+                const selectVal = document.getElementById('up-assignment-select').value;
+                const assignmentName = selectVal === 'CUSTOM' ? document.getElementById('up-assignment-custom').value : selectVal;
+
+                let file = null;
+                let linkUrl = null;
+                if (AppState.uploadMode === 'file') {
+                    file = document.getElementById('up-file').files[0];
+                    if (!file) return;
+                } else {
+                    linkUrl = document.getElementById('up-link').value.trim();
+                    if (!linkUrl) return;
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" class="inline animate-spin mr-2"></i> Submitting...';
+                lucide.createIcons();
+                status.classList.remove('hidden');
+                status.textContent = 'Uploading... please wait.';
+                status.className = 'text-sm font-medium mt-2 text-royhart-purple dark:text-purple-300 block text-center';
+
+                const artifactData = {
+                    studentEmail: AppState.user.email,
+                    studentName: AppState.user.name,
+                    gradYear: AppState.user.gradYear,
+                    title: document.getElementById('up-title').value,
+                    gradeLevel: document.getElementById('up-grade').value,
+                    schoolYear: document.getElementById('up-year').value, 
+                    type: document.getElementById('up-type').value,
+                    assignmentName: assignmentName,
+                    reflection: document.getElementById('up-reflection').value,
+                    bestWork: false, // Default to false, users toggle later from dashboard
+                    linkUrl: linkUrl, 
+                    notifyTeacherEmail: document.getElementById('up-notify-teacher').value 
+                };
+
+                const processUpload = async (base64Str, fName, fMime) => {
+                    try {
+                        const res = await runServer('uploadArtifact', base64Str, fName, fMime, artifactData);
+                        if(res.status === 'success') {
+                            status.textContent = 'Artifact successfully submitted!';
+                            status.className = 'text-sm font-medium mt-2 text-green-600 block text-center';
+                            
+                            await loadStudentArtifacts(AppState.user.email, 'student-artifacts-list', true);
+                            
+                            setTimeout(() => {
+                                closeUploadModal();
+                                btn.disabled = false;
+                                btn.innerHTML = 'Submit Artifact';
+                                status.classList.add('hidden');
+                            }, 1500);
+                            
+                        } else {
+                            throw new Error(res.message);
+                        }
+                    } catch (err) {
+                        status.textContent = 'Error: ' + err.message;
+                        status.className = 'text-sm font-medium mt-2 text-red-600 block text-center';
+                        btn.disabled = false;
+                        btn.innerHTML = 'Submit Artifact';
+                    } finally {
+                        lucide.createIcons();
+                    }
+                };
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const base64String = reader.result.split(',')[1];
+                        processUpload(base64String, file.name, file.type);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    processUpload(null, null, null);
+                }
+            });
+        }
+
+        // Form UX Helpers
+        function setUploadMode(mode) {
+            AppState.uploadMode = mode;
+            const tabFile = document.getElementById('tab-file-mode');
+            const tabLink = document.getElementById('tab-link-mode');
+            const panelFile = document.getElementById('mode-file-panel');
+            const panelLink = document.getElementById('mode-link-panel');
+            const upFile = document.getElementById('up-file');
+            const upLink = document.getElementById('up-link');
+            const linkStatus = document.getElementById('link-check-status');
+
+            if (mode === 'file') {
+                tabFile.className = 'pb-2 border-b-2 border-royhart-purple dark:border-purple-400 text-royhart-purple dark:text-purple-300 font-bold transition-colors';
+                tabLink.className = 'pb-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium hover:text-gray-700 dark:hover:text-gray-200 transition-colors';
+                panelFile.classList.remove('hidden');
+                panelLink.classList.add('hidden');
+                upFile.required = true;
+                upLink.required = false;
+                upLink.value = ''; 
+            } else {
+                tabLink.className = 'pb-2 border-b-2 border-royhart-purple dark:border-purple-400 text-royhart-purple dark:text-purple-300 font-bold transition-colors';
+                tabFile.className = 'pb-2 border-b-2 border-transparent text-gray-500 dark:text-gray-400 font-medium hover:text-gray-700 dark:hover:text-gray-200 transition-colors';
+                panelLink.classList.remove('hidden');
+                panelFile.classList.add('hidden');
+                upLink.required = true;
+                upFile.required = false;
+                upLink.value = ''; 
+            }
+            // Reset the access-check status whenever the mode flips
+            if (linkStatus) {
+                linkStatus.textContent = '';
+                linkStatus.className = 'text-xs';
+            }
+        }
+
+        async function checkLinkAccess() {
+            const urlInput = document.getElementById('up-link');
+            const statusEl = document.getElementById('link-check-status');
+            const btn = document.getElementById('btn-check-link');
+            const url = (urlInput.value || '').trim();
+
+            if (!url) {
+                statusEl.textContent = 'Paste a link first.';
+                statusEl.className = 'text-xs text-yellow-700 dark:text-yellow-300';
+                return;
+            }
+
+            btn.disabled = true;
+            statusEl.textContent = 'Checking...';
+            statusEl.className = 'text-xs text-gray-500 dark:text-gray-400';
+
+            try {
+                const res = await runServer('checkLinkAccess', url);
+                if (res && res.status === 'success') {
+                    statusEl.innerHTML = '<i data-lucide="check-circle-2" class="inline h-3.5 w-3.5 mr-1"></i> Access confirmed — ready to submit.';
+                    statusEl.className = 'text-xs text-green-600 dark:text-green-400 font-semibold';
+                } else {
+                    statusEl.innerHTML = '<i data-lucide="x-circle" class="inline h-3.5 w-3.5 mr-1"></i> ' + (res.message || 'Access blocked. Update sharing and try again.');
+                    statusEl.className = 'text-xs text-red-600 dark:text-red-400 font-semibold';
+                }
+            } catch (err) {
+                statusEl.innerHTML = '<i data-lucide="x-circle" class="inline h-3.5 w-3.5 mr-1"></i> Could not check access. Try again.';
+                statusEl.className = 'text-xs text-red-600 dark:text-red-400 font-semibold';
+            } finally {
+                btn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function handleAssignmentChange() {
+            const select = document.getElementById('up-assignment-select');
+            const customInput = document.getElementById('up-assignment-custom');
+            const typeSelect = document.getElementById('up-type');
+
+            if (select.value === 'CUSTOM') {
+                customInput.classList.remove('hidden');
+                customInput.required = true;
+            } else {
+                customInput.classList.add('hidden');
+                customInput.required = false;
+                
+                const assignData = AppState.assignments.find(a => a.name === select.value);
+                if (assignData && assignData.type) {
+                    const exists = Array.from(typeSelect.options).some(o => o.value === assignData.type);
+                    if (exists) typeSelect.value = assignData.type;
+                }
+            }
+        }
+
+        async function loadStudentArtifacts(email, containerId, isStudentUser = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="text-gray-500 dark:text-gray-400 animate-pulse">Loading artifacts...</div>';
+            
+            try {
+                const artifacts = await runServer('getStudentArtifacts', email);
+                if (!artifacts) throw new Error("Server returned an invalid format.");
+                AppState.currentArtifacts = artifacts;
+                
+                if (artifacts.length === 0) {
+                    container.innerHTML = '<div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg text-center text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700">No artifacts found.</div>';
+                    return;
+                }
+
+                container.innerHTML = artifacts.map(art => generateArtifactHTML(art, isStudentUser)).join('');
+                lucide.createIcons();
+            } catch(err) {
+                container.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg font-medium border border-red-200 dark:border-red-800">Error loading data: ${err.message || err}</div>`;
+            }
+        }
+
+        async function toggleArtifactBest(artifactId, newStatus) {
+            try {
+                const res = await runServer('toggleBestWork', artifactId, newStatus);
+                if (res.status === 'success') {
+                    const artIndex = AppState.currentArtifacts.findIndex(a => String(a.id) === String(artifactId));
+                    if (artIndex !== -1) {
+                        AppState.currentArtifacts[artIndex].bestWork = newStatus;
+                    }
+                    const container = document.getElementById('student-artifacts-list');
+                    if (container) {
+                        container.innerHTML = AppState.currentArtifacts.map(art => generateArtifactHTML(art, true)).join('');
+                        lucide.createIcons();
+                    }
+                } else {
+                    alert("Failed to update status: " + res.message);
+                }
+            } catch (err) {
+                alert("Failed to update status: " + err);
+            }
+        }
+
+        function generateArtifactHTML(art, isStudentUser = false) {
+            const isBest = String(art.bestWork).toLowerCase() === 'true';
+            
+            return `
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border ${isBest ? 'border-royhart-gold dark:border-yellow-600 shadow-md' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-colors hover:shadow-lg">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        ${!isStudentUser ? `
+                        <div class="text-xs text-royhart-purple dark:text-purple-400 font-bold mb-1 uppercase tracking-wider flex items-center cursor-pointer hover:underline" onclick="viewStudentDetails('${escapeHtml(art.studentEmail)}', '${escapeHtml(art.studentName)}', '${escapeHtml(art.gradYear)}')">
+                            <i data-lucide="user" class="h-3 w-3 mr-1"></i> ${escapeHtml(art.studentName)} (Class of ${escapeHtml(art.gradYear)})
+                        </div>` : ''}
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">${escapeHtml(art.title)}</h3>
+                            
+                            ${isStudentUser ? `
+                                <button onclick="toggleArtifactBest('${art.id}', ${!isBest})" class="${isBest ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-500 border-yellow-200 dark:border-yellow-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'} px-2 py-0.5 rounded flex items-center text-xs font-bold border transition-colors cursor-pointer group" title="${isBest ? 'Remove Best Work status' : 'Mark as Best Work'}">
+                                    <i data-lucide="star" class="h-3 w-3 mr-1 ${isBest ? 'fill-current text-royhart-gold dark:text-yellow-500' : 'text-gray-400 dark:text-gray-500 group-hover:text-royhart-gold dark:group-hover:text-yellow-500'} transition-colors"></i>
+                                    ${isBest ? 'Best Work' : 'Mark Best'}
+                                </button>
+                            ` : (isBest ? `<span class="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-500 px-2 py-0.5 rounded flex items-center text-xs font-bold border border-yellow-200 dark:border-yellow-700"><i data-lucide="star" class="h-3 w-3 mr-1 fill-current text-royhart-gold dark:text-yellow-500"></i> Best Work</span>` : '')}
+
+                        </div>
+                        <div class="flex gap-3 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600 text-xs font-medium">Grade ${escapeHtml(art.gradeLevel)}</span>
+                            <span class="text-xs font-medium mt-0.5">Year: ${escapeHtml(art.schoolYear)}</span>
+                            <span class="text-xs font-medium mt-0.5">Submitted: ${art.dateSubmitted ? new Date(art.dateSubmitted).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 shrink-0 ml-4">
+                        <a href="${art.url}" target="_blank" class="text-royhart-purple dark:text-purple-300 hover:text-royhart-dark dark:hover:text-white bg-royhart-light dark:bg-gray-700 p-2 rounded-lg flex items-center transition-colors">
+                            <i data-lucide="external-link" class="h-4 w-4 mr-1"></i> View
+                        </a>
+                        ${!isStudentUser ? `
+                        <button onclick="confirmDeleteArtifact('${art.id}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors" title="Delete Anchor Artifact">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-600 dark:text-gray-300 mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <p><strong class="text-gray-700 dark:text-gray-400">Type:</strong> ${escapeHtml(art.type) || 'N/A'}</p>
+                    <p><strong class="text-gray-700 dark:text-gray-400">Anchor Artifact:</strong> ${escapeHtml(art.assignmentName) || 'N/A'}</p>
+                </div>
+
+                <div class="mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    <strong class="block mb-1 text-royhart-purple dark:text-purple-300">Student Reflection:</strong>
+                    <div class="whitespace-pre-wrap">${art.reflection ? escapeHtml(art.reflection) : '<em class="text-gray-400 dark:text-gray-500">No reflection provided.</em>'}</div>
+                </div>
+                
+                <!-- Teacher Feedback Section -->
+                <div class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4 transition-colors">
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                        <i data-lucide="message-square" class="h-4 w-4 mr-1 text-royhart-gold"></i> Teacher Feedback
+                    </h4>
+                    ${isStudentUser ? 
+                        `<div class="bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded border border-blue-100 dark:border-blue-800/50 text-gray-700 dark:text-gray-300 whitespace-pre-wrap transition-colors">${art.teacherNotes ? escapeHtml(art.teacherNotes) : '<em class="text-gray-400 dark:text-gray-500">No feedback provided yet.</em>'}</div>` 
+                        : 
+                        `<div>
+                            <textarea id="note-${art.id}" rows="2" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg outline-none focus:ring-2 focus:ring-royhart-purple text-sm transition-colors" placeholder="Leave notes for the student...">${escapeHtml(art.teacherNotes)}</textarea>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-xs text-gray-400 dark:text-gray-500">Last updated: ${art.lastUpdated ? new Date(art.lastUpdated).toLocaleDateString() : 'Never'}</span>
+                                <button onclick="saveFeedback('${art.id}', 'note-${art.id}', 'btn-save-${art.id}')" id="btn-save-${art.id}" class="bg-royhart-purple text-white px-4 py-1.5 rounded text-sm hover:bg-royhart-dark transition flex items-center">
+                                    Save Notes
+                                </button>
+                            </div>
+                        </div>`
+                    }
+                </div>
+            </div>
+            `;
+        }
+        
+        // --- PORTFOLIO MASTER PDF EXPORT LOGIC ---
+        async function exportPortfolio(btnElement) {
+            if (!AppState.currentArtifacts || AppState.currentArtifacts.length === 0) {
+                alert("You don't have any artifacts to export yet!");
+                return;
+            }
+
+            const originalHtml = btnElement.innerHTML;
+            btnElement.disabled = true;
+            const setProgress = (text) => {
+                btnElement.innerHTML = `<i data-lucide="loader-2" class="h-5 w-5 mr-2 animate-spin"></i> ${text}`;
+                lucide.createIcons();
+            };
+            setProgress('Preparing portfolio...');
+
+            try {
+                // Step 1: Get the manifest and cover page in one fast call.
+                const manifest = await runServer('getPortfolioManifest', AppState.user.email);
+                if (!manifest || !manifest.coverPdf) {
+                    throw new Error("Could not generate the portfolio cover page.");
+                }
+
+                const { PDFDocument } = PDFLib;
+                const mergedPdf = await PDFDocument.create();
+
+                // Add the cover page first.
+                try {
+                    const coverDoc = await PDFDocument.load(manifest.coverPdf);
+                    const coverPages = await mergedPdf.copyPages(coverDoc, coverDoc.getPageIndices());
+                    coverPages.forEach((page) => mergedPdf.addPage(page));
+                } catch (e) {
+                    console.error("Could not load cover page", e);
+                }
+
+                // Step 2: Fetch each artifact PDF one at a time.
+                // Sequential keeps us well under any quota and lets us show progress.
+                // If a single artifact fails, we skip it and continue.
+                const total = manifest.artifacts.length;
+                for (let i = 0; i < total; i++) {
+                    const art = manifest.artifacts[i];
+                    setProgress(`Compiling ${i + 1} of ${total}...`);
+                    try {
+                        const pdfB64 = await runServer('getPortfolioArtifactPdf', AppState.user.email, art.index);
+                        if (pdfB64) {
+                            const pdfDoc = await PDFDocument.load(pdfB64);
+                            const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                            pages.forEach((page) => mergedPdf.addPage(page));
+                        }
+                    } catch (e) {
+                        console.error(`Skipped artifact ${i} (${art.title}):`, e);
+                        // Continue to the next artifact rather than failing the whole export.
+                    }
+                }
+
+                // Step 3: Save and trigger the browser download.
+                setProgress('Finalizing PDF...');
+                const pdfBytes = await mergedPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${AppState.user.name.replace(/\s+/g, '_')}_Master_Portfolio.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+            } catch (err) {
+                alert("Failed to export portfolio. Error: " + (err && err.message ? err.message : err));
+            } finally {
+                btnElement.innerHTML = originalHtml;
+                btnElement.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // TEACHER DASHBOARD LOGIC
+        // -------------------------------------------------------------
+        function displayEmptySearchState() {
+            const list = document.getElementById('students-list');
+            list.innerHTML = `
+                <div class="p-12 text-center text-gray-500 dark:text-gray-400">
+                    <i data-lucide="users" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Student Database Loaded</h3>
+                    <p>Use the search bar or filters above to find specific students.</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function initTeacherView() {
+            document.getElementById('view-teacher').classList.remove('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+            document.getElementById('teacher-student-details').classList.add('hidden');
+
+            const list = document.getElementById('students-list');
+            list.innerHTML = '<div class="p-6 text-center text-gray-500 dark:text-gray-400 animate-pulse">Loading database into memory...</div>';
+
+            try {
+                const [studentsResponse, artifactsResponse, configResponse] = await Promise.all([
+                    runServer('getAllStudents'),
+                    runServer('getAllArtifacts'),
+                    runServer('getFormConfig')
+                ]);
+                
+                AppState.allStudents = studentsResponse || [];
+                AppState.allArtifacts = artifactsResponse || [];
+                AppState.assignments = configResponse.assignments || [];
+                AppState.currentYear = configResponse.currentYear || new Date().getFullYear() + '/' + String(new Date().getFullYear() + 1).slice(-2);
+
+                updateLiveStats();
+                renderQuickFilters();
+                renderAssignmentsList();
+                populateReportFilters();
+                populateArtifactYearFilter();
+                renderReports();
+                displayEmptySearchState();
+                
+                document.getElementById('search-students').addEventListener('input', applyFilters);
+
+                document.getElementById('art-search-text').addEventListener('input', applyArtifactFilters);
+                document.getElementById('art-filter-type').addEventListener('change', applyArtifactFilters);
+                document.getElementById('art-filter-grade').addEventListener('change', applyArtifactFilters);
+                document.getElementById('art-filter-year').addEventListener('change', applyArtifactFilters);
+                document.getElementById('art-filter-best').addEventListener('change', applyArtifactFilters);
+                document.getElementById('art-filter-needs-feedback').addEventListener('change', applyArtifactFilters);
+                
+                applyArtifactFilters();
+
+            } catch(err) {
+                list.innerHTML = `<div class="p-6 text-red-500 dark:text-red-400">Error loading roster: ${err.message || err}</div>`;
+            }
+        }
+
+        function updateLiveStats() {
+            document.getElementById('stat-total-students').textContent = AppState.allStudents.length;
+            document.getElementById('stat-needs-feedback').textContent = AppState.allArtifacts.filter(a => !a.teacherNotes || a.teacherNotes.trim() === '').length;
+            document.getElementById('stat-best-works').textContent = AppState.allArtifacts.filter(a => String(a.bestWork).toLowerCase() === 'true').length;
+        }
+
+        function viewNeedsFeedback() {
+            // Clear any lingering anchor filter from a prior navigation so the
+            // Needs Feedback view shows the whole queue, not just one anchor's.
+            AppState.activeAnchorFilter = null;
+            switchTeacherTab('artifacts');
+            document.getElementById('art-filter-needs-feedback').checked = true;
+            document.getElementById('art-filter-best').checked = false; 
+            applyArtifactFilters();
+        }
+
+        function viewBestWorks() {
+            AppState.activeAnchorFilter = null;
+            switchTeacherTab('artifacts');
+            document.getElementById('art-filter-best').checked = true;
+            document.getElementById('art-filter-needs-feedback').checked = false; 
+            applyArtifactFilters();
+        }
+
+        function switchTeacherTab(tab) {
+            const tabs = ['roster', 'artifacts', 'assignments', 'reports'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const section = document.getElementById(`${t}-section`);
+                if (t === tab) {
+                    btn.className = 'pb-3 text-royhart-purple dark:text-purple-400 font-bold border-b-2 border-royhart-purple dark:border-purple-400 transition-colors';
+                    section.classList.remove('hidden');
+                    if (tab === 'reports') renderReports(); // Re-render when opening
+                } else {
+                    btn.className = 'pb-3 text-gray-500 dark:text-gray-400 font-medium border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-200 transition-colors';
+                    section.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderQuickFilters() {
+            const container = document.getElementById('quick-filters');
+            const gradYears = [...new Set(AppState.allStudents.map(s => s.gradYear).filter(Boolean))].sort((a, b) => a - b);
+            
+            if (gradYears.length === 0) return;
+
+            let html = `<div class="flex flex-wrap gap-2 items-center">
+                <span class="text-sm font-semibold text-gray-500 dark:text-gray-400 mr-2"><i data-lucide="filter" class="inline h-4 w-4 mr-1"></i>Classes:</span>
+                <button onclick="setFilter(null)" class="filter-btn active-filter px-4 py-1.5 rounded-full text-xs font-semibold border border-royhart-purple bg-royhart-purple text-white transition-colors shadow-sm">All</button>`;
+
+            gradYears.forEach(y => {
+                html += `<button onclick="setFilter('${y}')" class="filter-btn filter-year-${y} px-4 py-1.5 rounded-full text-xs font-semibold border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors shadow-sm">Class of ${y}</button>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            container.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function setFilter(value) {
+            AppState.activeFilter = value ? { type: 'year', value } : null;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('border-royhart-purple', 'bg-royhart-purple', 'text-white');
+                btn.classList.add('border-gray-300', 'bg-white', 'text-gray-600', 'dark:border-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300');
+            });
+            
+            const activeClassList = ['border-royhart-purple', 'bg-royhart-purple', 'text-white'];
+            const inactiveClassList = ['border-gray-300', 'bg-white', 'text-gray-600', 'dark:border-gray-600', 'dark:bg-gray-700', 'dark:text-gray-300'];
+
+            if (!value) {
+                const btn = document.querySelector('.active-filter');
+                btn.classList.add(...activeClassList);
+                btn.classList.remove(...inactiveClassList);
+            } else {
+                const btn = document.querySelector(`.filter-year-${value}`);
+                if (btn) {
+                    btn.classList.add(...activeClassList);
+                    btn.classList.remove(...inactiveClassList);
+                }
+            }
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('search-students').value.toLowerCase().trim();
+            let filtered = AppState.allStudents;
+
+            if (AppState.activeFilter && AppState.activeFilter.type === 'year') {
+                filtered = filtered.filter(s => String(s.gradYear) === String(AppState.activeFilter.value));
+            }
+            if (term.length > 0) {
+                filtered = filtered.filter(s => 
+                    s.name.toLowerCase().includes(term) || s.email.toLowerCase().includes(term) || String(s.gradYear).includes(term)
+                );
+            }
+            if (term.length === 0 && !AppState.activeFilter) {
+                displayEmptySearchState();
+            } else {
+                renderStudentList(filtered.slice(0, 150));
+            }
+        }
+
+        function renderStudentList(students) {
+            const list = document.getElementById('students-list');
+            if (students.length === 0) {
+                list.innerHTML = `
+                    <div class="p-10 text-center text-gray-500 dark:text-gray-400">
+                        <i data-lucide="search-x" class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2"></i>
+                        <p>No students match your search or filter.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = students.map(s => `
+                <li class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer flex justify-between items-center group" onclick="viewStudentDetails('${escapeHtml(s.email)}', '${escapeHtml(s.name)}', '${escapeHtml(s.gradYear)}')">
+                    <div>
+                        <div class="font-bold text-gray-800 dark:text-gray-200 group-hover:text-royhart-purple dark:group-hover:text-purple-400 transition-colors">${escapeHtml(s.name)}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${escapeHtml(s.email)} &bull; Class of ${escapeHtml(s.gradYear)}</div>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-400 dark:text-gray-500 group-hover:text-royhart-purple dark:group-hover:text-purple-400 transition-colors"></i>
+                </li>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- ARTIFACT EXPLORER LOGIC ---
+        function applyArtifactFilters() {
+            const searchText = document.getElementById('art-search-text').value.toLowerCase().trim();
+            const typeFilter = document.getElementById('art-filter-type').value;
+            const gradeFilter = document.getElementById('art-filter-grade').value;
+            const yearFilter = document.getElementById('art-filter-year') ? document.getElementById('art-filter-year').value : '';
+            const bestFilter = document.getElementById('art-filter-best').checked;
+            const needsFeedbackFilter = document.getElementById('art-filter-needs-feedback').checked;
+            const anchorFilter = (AppState.activeAnchorFilter || '').toLowerCase().trim();
+
+            let filtered = AppState.allArtifacts;
+
+            if (anchorFilter) {
+                // Exact (trimmed, case-insensitive) match on the assignment name.
+                // This is set when navigating from the Anchor Artifact Library so
+                // teachers see only submissions tied to that anchor — not partial
+                // matches that the text search would otherwise allow.
+                filtered = filtered.filter(a => (a.assignmentName || '').toString().toLowerCase().trim() === anchorFilter);
+            }
+            if (searchText) {
+                filtered = filtered.filter(a => 
+                    (a.title || '').toLowerCase().includes(searchText) || 
+                    (a.assignmentName || '').toLowerCase().includes(searchText) ||
+                    (a.studentName || '').toLowerCase().includes(searchText)
+                );
+            }
+            if (typeFilter) {
+                filtered = filtered.filter(a => a.type === typeFilter);
+            }
+            if (gradeFilter) {
+                filtered = filtered.filter(a => String(a.gradeLevel) === gradeFilter);
+            }
+            if (yearFilter) {
+                filtered = filtered.filter(a => a.schoolYear === yearFilter);
+            }
+            if (bestFilter) {
+                filtered = filtered.filter(a => String(a.bestWork).toLowerCase() === 'true');
+            }
+            if (needsFeedbackFilter) {
+                filtered = filtered.filter(a => !a.teacherNotes || a.teacherNotes.trim() === '');
+            }
+
+            // Update the active-filter banner if an anchor filter is in play.
+            updateAnchorFilterBanner(filtered.length);
+
+            renderGlobalArtifacts(filtered.slice(0, 200));
+        }
+
+        function updateAnchorFilterBanner(matchCount) {
+            const banner = document.getElementById('art-active-filter-banner');
+            const textEl = document.getElementById('art-active-filter-text');
+            if (!banner || !textEl) return;
+            if (AppState.activeAnchorFilter) {
+                const yr = document.getElementById('art-filter-year').value;
+                textEl.textContent = `Showing submissions for "${AppState.activeAnchorFilter}"${yr ? ' — ' + yr : ' — all years'} (${matchCount} found)`;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function clearArtifactFilters() {
+            AppState.activeAnchorFilter = null;
+            document.getElementById('art-search-text').value = '';
+            document.getElementById('art-filter-type').value = '';
+            document.getElementById('art-filter-grade').value = '';
+            document.getElementById('art-filter-year').value = '';
+            document.getElementById('art-filter-best').checked = false;
+            document.getElementById('art-filter-needs-feedback').checked = false;
+            applyArtifactFilters();
+        }
+
+        /**
+         * Navigates to the Global Artifact Explorer with filters pre-set for
+         * a specific anchor artifact. Called from the Anchor Artifact Library cards.
+         */
+        function viewAnchorSubmissions(anchorName) {
+            // Reset everything else so the view is clean.
+            document.getElementById('art-search-text').value = '';
+            document.getElementById('art-filter-type').value = '';
+            document.getElementById('art-filter-grade').value = '';
+            document.getElementById('art-filter-best').checked = false;
+            document.getElementById('art-filter-needs-feedback').checked = false;
+
+            AppState.activeAnchorFilter = anchorName;
+
+            // Default the year filter to the current school year so teachers
+            // see this year's submissions immediately. They can broaden to
+            // "All School Years" via the dropdown.
+            const yearSelect = document.getElementById('art-filter-year');
+            if (yearSelect && AppState.currentYear) {
+                const exists = Array.from(yearSelect.options).some(o => o.value === AppState.currentYear);
+                yearSelect.value = exists ? AppState.currentYear : '';
+            }
+
+            switchTeacherTab('artifacts');
+            applyArtifactFilters();
+        }
+
+        function renderGlobalArtifacts(artifacts) {
+            const container = document.getElementById('global-artifacts-list');
+            
+            if (artifacts.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-12 rounded-xl border border-gray-200 dark:border-gray-700 text-center text-gray-500 dark:text-gray-400 shadow-sm transition-colors">
+                        <i data-lucide="folder-search" class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-3"></i>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">No Artifacts Found</h3>
+                        <p>Adjust your filters or search terms to see more results.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = artifacts.map(art => generateArtifactHTML(art, false)).join('');
+            lucide.createIcons();
+        }
+
+        // --- ASSIGNMENT LIBRARY LOGIC ---
+        function renderAssignmentsList() {
+            const container = document.getElementById('assignments-list');
+            if (AppState.assignments.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 transition-colors">No anchor artifacts created yet.</div>`;
+                return;
+            }
+
+            // Sort logic
+            const sortMode = document.getElementById('assignment-sort') ? document.getElementById('assignment-sort').value : 'name';
+            let sortedAssignments = [...AppState.assignments];
+            
+            sortedAssignments.sort((a, b) => {
+                if (sortMode === 'grade') {
+                    const gA = parseInt(a.gradeLevel) || 0;
+                    const gB = parseInt(b.gradeLevel) || 0;
+                    if (gA !== gB) return gA - gB;
+                } else if (sortMode === 'creator') {
+                    const cA = (a.creatorName || '').toLowerCase();
+                    const cB = (b.creatorName || '').toLowerCase();
+                    if (cA !== cB) return cA.localeCompare(cB);
+                }
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            container.innerHTML = sortedAssignments.map(a => {
+                const isReq = String(a.required).toLowerCase() === 'true';
+                const creatorText = a.creatorName ? escapeHtml(a.creatorName) : 'Unknown Teacher';
+                
+                // Count submissions for this anchor in the current school year,
+                // and a separate total across all years. Matched on assignmentName
+                // case-insensitively + trimmed so trailing spaces don't break the join.
+                const anchorKey = (a.name || '').toLowerCase().trim();
+                const allSubs = AppState.allArtifacts.filter(ar =>
+                    (ar.assignmentName || '').toString().toLowerCase().trim() === anchorKey
+                );
+                const currentYearSubs = allSubs.filter(ar => ar.schoolYear === AppState.currentYear);
+                const subCountText = `${currentYearSubs.length} this year${allSubs.length !== currentYearSubs.length ? ` · ${allSubs.length} all-time` : ''}`;
+                
+                return `
+                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all flex flex-col h-full relative group">
+                    <!-- Delete Button -->
+                    <button onclick="confirmDeleteAssignment('${escapeHtml(a.name)}')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete Anchor Artifact">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                    </button>
+                    
+                    <div class="flex-grow pr-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">${escapeHtml(a.name)}</h3>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs font-medium text-gray-500 dark:text-gray-400 mb-3">
+                            ${isReq ? `<span class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded border border-red-100 dark:border-red-800 flex-shrink-0">Required</span>` : ''}
+                            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-royhart-purple dark:text-purple-300 border border-gray-200 dark:border-gray-600">${escapeHtml(a.type) || 'Any Type'}</span>
+                            <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">Grade ${escapeHtml(a.gradeLevel) || 'Any'}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">${escapeHtml(a.description) || '<em class="text-gray-400 dark:text-gray-500">No description provided.</em>'}</p>
+                    </div>
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto transition-colors space-y-3">
+                        <button onclick="viewAnchorSubmissions('${escapeHtml(a.name)}')" class="w-full bg-royhart-light dark:bg-gray-700 hover:bg-purple-100 dark:hover:bg-gray-600 text-royhart-purple dark:text-purple-300 text-sm font-semibold px-3 py-2 rounded-lg flex items-center justify-center transition-colors">
+                            <i data-lucide="folder-open" class="h-4 w-4 mr-2"></i>
+                            View ${currentYearSubs.length} Submission${currentYearSubs.length === 1 ? '' : 's'}
+                        </button>
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center" title="Creator"><i data-lucide="user" class="h-3 w-3 mr-1"></i> ${creatorText}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500" title="${subCountText}">${subCountText}</p>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        async function confirmDeleteAssignment(assignmentName) {
+            if (!confirm(`Are you sure you want to permanently delete the anchor artifact "${assignmentName}"?`)) {
+                return;
+            }
+            
+            try {
+                const res = await runServer('deleteAssignment', assignmentName);
+                if (res.status === 'success') {
+                    // Update state variables locally so we don't have to fetch again
+                    AppState.assignments = AppState.assignments.filter(a => a.name !== assignmentName);
+                    renderAssignmentsList();
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                alert("Failed to delete anchor artifact: " + err);
+            }
+        }
+
+        function toggleAddAssignment() {
+            const section = document.getElementById('add-assignment-section');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                document.getElementById('new-assign-name').value = '';
+                document.getElementById('new-assign-grade').value = '';
+                document.getElementById('new-assign-type').value = '';
+                document.getElementById('new-assign-desc').value = '';
+                document.getElementById('new-assign-req').checked = false;
+                document.getElementById('add-assign-status').classList.add('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        async function processAddAssignment() {
+            const btn = document.getElementById('btn-add-assign');
+            const status = document.getElementById('add-assign-status');
+            
+            const details = {
+                name: document.getElementById('new-assign-name').value.trim(),
+                gradeLevel: document.getElementById('new-assign-grade').value,
+                type: document.getElementById('new-assign-type').value,
+                description: document.getElementById('new-assign-desc').value.trim(),
+                required: document.getElementById('new-assign-req').checked
+            };
+
+            if (!details.name) {
+                status.textContent = 'Anchor Artifact Name is required.';
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin mr-2"></i> Saving...';
+            lucide.createIcons();
+            status.classList.add('hidden');
+
+            try {
+                const res = await runServer('addAssignment', details);
+                
+                if (res.status === 'success') {
+                    status.textContent = res.message;
+                    status.className = 'text-sm font-medium text-green-600 block';
+                    status.classList.remove('hidden');
+                    
+                    const config = await runServer('getFormConfig');
+                    AppState.assignments = config.assignments || [];
+                    renderAssignmentsList();
+                    
+                    setTimeout(() => { if(!status.classList.contains('hidden')){ toggleAddAssignment(); } }, 2500);
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                status.textContent = 'Error: ' + err.message;
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Anchor Artifact';
+                lucide.createIcons();
+            }
+        }
+
+        // --- SUBMISSION REPORTS LOGIC ---
+        function populateArtifactYearFilter() {
+            // The Global Artifact Explorer's year dropdown shares its option set
+            // with the Reports tab, but defaults to "All School Years" so the
+            // unfiltered view stays unchanged from prior behavior.
+            const selectYear = document.getElementById('art-filter-year');
+            if (!selectYear) return;
+            const years = [...new Set(AppState.allArtifacts.map(a => a.schoolYear).filter(Boolean))].sort().reverse();
+            if (AppState.currentYear && !years.includes(AppState.currentYear)) {
+                years.unshift(AppState.currentYear);
+            }
+            let html = '<option value="">All School Years</option>';
+            years.forEach(y => { html += `<option value="${y}">${y}</option>`; });
+            selectYear.innerHTML = html;
+        }
+
+        function populateReportFilters() {
+            const selectYear = document.getElementById('report-year-filter');
+            const years = [...new Set(AppState.allArtifacts.map(a => a.schoolYear).filter(Boolean))].sort().reverse();
+            
+            if (!years.includes(AppState.currentYear)) {
+                years.unshift(AppState.currentYear);
+            }
+
+            selectYear.innerHTML = years.map(y => `<option value="${y}" ${y === AppState.currentYear ? 'selected' : ''}>${y}</option>`).join('');
+
+            // Populate the Class Filter dropdown for reports
+            const selectClass = document.getElementById('report-class-filter');
+            if (selectClass) {
+                const gradYears = [...new Set(AppState.allStudents.map(s => s.gradYear).filter(Boolean))].sort((a, b) => a - b);
+                let classHtml = '<option value="">All Classes</option>';
+                gradYears.forEach(y => classHtml += `<option value="${y}">Class of ${y}</option>`);
+                selectClass.innerHTML = classHtml;
+            }
+        }
+
+        function renderReports() {
+            const year = document.getElementById('report-year-filter').value || AppState.currentYear;
+            const searchTerm = document.getElementById('report-search-text') ? document.getElementById('report-search-text').value.toLowerCase().trim() : '';
+            const classFilter = document.getElementById('report-class-filter') ? document.getElementById('report-class-filter').value : '';
+            const missingFilter = document.getElementById('report-missing-filter') ? document.getElementById('report-missing-filter').checked : false;
+
+            const tbody = document.getElementById('report-tbody');
+            const yearArtifacts = AppState.allArtifacts.filter(a => a.schoolYear === year);
+
+            // Filter students based on search and class first
+            let filteredStudents = AppState.allStudents;
+            
+            if (classFilter) {
+                filteredStudents = filteredStudents.filter(s => String(s.gradYear) === String(classFilter));
+            }
+            
+            if (searchTerm) {
+                filteredStudents = filteredStudents.filter(s => 
+                    s.name.toLowerCase().includes(searchTerm) || s.email.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Initialize object with filtered students
+            const studentCounts = {};
+            filteredStudents.forEach(s => {
+                studentCounts[s.email] = { name: s.name, gradYear: s.gradYear, count: 0, email: s.email };
+            });
+
+            // Count artifacts for the selected year
+            yearArtifacts.forEach(a => {
+                if(studentCounts[a.studentEmail]) {
+                    studentCounts[a.studentEmail].count++;
+                }
+            });
+
+            // Convert back to array
+            let reportData = Object.values(studentCounts);
+
+            // Apply missing filter if toggled
+            if (missingFilter) {
+                reportData = reportData.filter(s => s.count < 2);
+            }
+
+            if (reportData.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-gray-500 dark:text-gray-400">No students match your criteria.</td></tr>`;
+                 return;
+            }
+
+            tbody.innerHTML = reportData.map(s => {
+                let badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+                if (s.count === 1) badgeClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+                if (s.count >= 2) badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+
+                return `
+                <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors" onclick="viewStudentDetails('${escapeHtml(s.email)}', '${escapeHtml(s.name)}', '${escapeHtml(s.gradYear)}')">
+                    <td class="py-4 px-4 text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(s.name)}</td>
+                    <td class="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">Class of ${escapeHtml(s.gradYear)}</td>
+                    <td class="py-4 px-4 text-sm text-center">
+                        <span class="${badgeClass} px-3 py-1 rounded-full font-bold">
+                            ${s.count}
+                        </span>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // --- ROSTER/STUDENT DETAILS LOGIC ---
+        async function viewStudentDetails(email, name, gradYear) {
+            document.getElementById('teacher-dashboard').classList.add('hidden');
+            document.getElementById('teacher-student-details').classList.remove('hidden');
+            
+            document.getElementById('ts-name').textContent = name;
+            document.getElementById('ts-email').textContent = email;
+            document.getElementById('ts-grad-year').textContent = `Class of ${gradYear}`;
+
+            await loadStudentArtifacts(email, 'ts-artifacts-list', false);
+        }
+
+        function showTeacherDashboard() {
+            document.getElementById('teacher-student-details').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+        }
+
+        async function saveFeedback(artifactId, textareaId, buttonId) {
+            const btn = document.getElementById(buttonId);
+            const textarea = document.getElementById(textareaId);
+            const note = textarea.value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin mr-1"></i> Saving...';
+            lucide.createIcons();
+
+            try {
+                const res = await runServer('saveTeacherNote', artifactId, note);
+                if (res.status === 'success') {
+                    btn.innerHTML = '<i data-lucide="check" class="h-4 w-4 mr-1"></i> Saved!';
+                    btn.classList.replace('bg-royhart-purple', 'bg-green-600');
+                    lucide.createIcons();
+                    
+                    const artIndex = AppState.allArtifacts.findIndex(a => String(a.id) === String(artifactId));
+                    if (artIndex !== -1) {
+                        AppState.allArtifacts[artIndex].teacherNotes = note;
+                        updateLiveStats();
+                    }
+
+                    setTimeout(() => {
+                        btn.innerHTML = 'Save Notes';
+                        btn.classList.replace('bg-green-600', 'bg-royhart-purple');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                alert("Failed to save feedback: " + err);
+                btn.innerHTML = 'Save Notes';
+                btn.disabled = false;
+            }
+        }
+
+        async function confirmDeleteArtifact(artifactId) {
+            if (!confirm("Are you sure you want to remove this artifact? This will delete the record permanently.")) {
+                return;
+            }
+            
+            try {
+                const res = await runServer('deleteArtifact', artifactId);
+                if (res.status === 'success') {
+                    // Update state variables
+                    AppState.allArtifacts = AppState.allArtifacts.filter(a => String(a.id) !== String(artifactId));
+                    AppState.currentArtifacts = AppState.currentArtifacts.filter(a => String(a.id) !== String(artifactId));
+                    
+                    updateLiveStats(); // Refreshes the top cards
+                    
+                    // Re-render appropriate views based on what is currently open
+                    if (!document.getElementById('teacher-student-details').classList.contains('hidden')) {
+                        const container = document.getElementById('ts-artifacts-list');
+                        if (AppState.currentArtifacts.length === 0) {
+                            container.innerHTML = '<div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg text-center text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-700">No artifacts found.</div>';
+                        } else {
+                            container.innerHTML = AppState.currentArtifacts.map(art => generateArtifactHTML(art, false)).join('');
+                            lucide.createIcons();
+                        }
+                    } else if (!document.getElementById('artifacts-section').classList.contains('hidden')) {
+                        applyArtifactFilters(); 
+                    }
+                    
+                    if (!document.getElementById('reports-section').classList.contains('hidden')) {
+                        renderReports();
+                    }
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                alert("Failed to delete artifact: " + err);
+            }
+        }
+
+        // --- ADD STUDENT LOGIC ---
+        function toggleAddStudent() {
+            const section = document.getElementById('add-student-section');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                document.getElementById('bulk-import-section').classList.add('hidden');
+                document.getElementById('new-std-name').value = '';
+                document.getElementById('new-std-email').value = '';
+                document.getElementById('new-std-grad').value = '';
+                document.getElementById('new-std-grade').value = '';
+                document.getElementById('add-student-status').classList.add('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        async function processAddStudent() {
+            const btn = document.getElementById('btn-add-student');
+            const status = document.getElementById('add-student-status');
+            const name = document.getElementById('new-std-name').value.trim();
+            const email = document.getElementById('new-std-email').value.trim();
+            const gradYear = document.getElementById('new-std-grad').value.trim();
+            const grade = document.getElementById('new-std-grade').value;
+
+            if (!name || !email) {
+                status.textContent = 'Student Name and Email are required.';
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin mr-2"></i> Saving...';
+            lucide.createIcons();
+            status.classList.add('hidden');
+
+            try {
+                const csvData = `Student Name,Student Email,Grad Year,Current Grade\n"${name}","${email}","${gradYear}","${grade}"`;
+                const res = await runServer('bulkImportStudents', csvData);
+                
+                if (res.status === 'success') {
+                    if(res.added > 0) {
+                        status.textContent = `${name} added successfully!`;
+                        status.className = 'text-sm font-medium text-green-600 block';
+                    } else {
+                        status.textContent = 'This student email is already registered.';
+                        status.className = 'text-sm font-medium text-yellow-600 block';
+                    }
+                    status.classList.remove('hidden');
+                    
+                    AppState.allStudents = await runServer('getAllStudents');
+                    updateLiveStats();
+                    renderQuickFilters(); 
+                    applyFilters(); 
+                    
+                    setTimeout(() => { if(!status.classList.contains('hidden')){ toggleAddStudent(); } }, 2500);
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                status.textContent = 'Error: ' + err.message;
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Student';
+                lucide.createIcons();
+            }
+        }
+
+        // --- BULK IMPORT LOGIC ---
+        function toggleBulkImport() {
+            const section = document.getElementById('bulk-import-section');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                document.getElementById('add-student-section').classList.add('hidden'); 
+                document.getElementById('csv-input').value = '';
+                document.getElementById('import-status').classList.add('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        async function processBulkImport() {
+            const btn = document.getElementById('btn-import');
+            const csvText = document.getElementById('csv-input').value.trim();
+            const status = document.getElementById('import-status');
+
+            if (!csvText) {
+                status.textContent = 'Please paste CSV data first.';
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 animate-spin mr-2"></i> Importing...';
+            lucide.createIcons();
+            status.classList.add('hidden');
+
+            try {
+                const res = await runServer('bulkImportStudents', csvText);
+                if (res.status === 'success') {
+                    status.textContent = res.message;
+                    status.className = 'text-sm font-medium text-green-600 block';
+                    status.classList.remove('hidden');
+                    
+                    AppState.allStudents = await runServer('getAllStudents');
+                    updateLiveStats();
+                    renderQuickFilters(); 
+                    applyFilters(); 
+                    
+                    setTimeout(() => { if(!status.classList.contains('hidden')){ toggleBulkImport(); } }, 4000);
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (err) {
+                status.textContent = 'Error: ' + err.message;
+                status.className = 'text-sm font-medium text-red-600 block';
+                status.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Run Import';
+                lucide.createIcons();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // UTILITIES
+        // -------------------------------------------------------------
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
